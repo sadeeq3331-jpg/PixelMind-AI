@@ -3,149 +3,401 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PixelMind AI – Generate Images from Text</title>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Video to MP3 · local converter</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #f0f4fa; color: #1f2937; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        header { background: linear-gradient(145deg, #1e1b4b, #312e81); color: white; padding: 40px 0; border-radius: 0 0 40px 40px; }
-        h1 { font-size: 3rem; font-weight: 700; text-align: center; }
-        .subhead { text-align: center; font-size: 1.2rem; opacity: 0.9; margin-top: 10px; }
-        .card { background: white; border-radius: 24px; padding: 30px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); margin: 40px 0; }
-        .prompt-box { display: flex; gap: 10px; flex-wrap: wrap; }
-        #prompt { flex: 1; min-width: 250px; padding: 15px 20px; border: 2px solid #e5e7eb; border-radius: 60px; font-size: 1rem; outline: none; }
-        #prompt:focus { border-color: #4f46e5; }
-        #generateBtn { background: #4f46e5; color: white; border: none; padding: 15px 30px; border-radius: 60px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        #generateBtn:hover { background: #6366f1; transform: translateY(-2px); }
-        #generateBtn:disabled { opacity: 0.5; pointer-events: none; }
-        .result-area { margin-top: 30px; text-align: center; min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #generatedImage { max-width: 100%; max-height: 500px; border-radius: 20px; box-shadow: 0 20px 30px -10px rgba(0,0,0,0.2); margin-top: 20px; }
-        .image-meta { margin-top: 15px; color: #6b7280; font-size: 0.9rem; }
-        .ad-placeholder { background: #f9fafb; border: 2px dashed #d1d5db; border-radius: 12px; padding: 30px; text-align: center; margin: 30px 0; color: #9ca3af; }
-        footer { background: #111827; color: white; padding: 30px 0; border-radius: 40px 40px 0 0; margin-top: 50px; text-align: center; }
-        .footer-links a { color: #9ca3af; margin: 0 15px; text-decoration: none; }
-        .footer-links a:hover { color: white; }
-        .note { background: #fff3cd; border-left: 6px solid #fbbf24; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 680px;
+            padding: 2.5rem;
+            transition: all 0.2s;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #4a5568;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+            border-left: 4px solid #9f7aea;
+            padding-left: 1rem;
+        }
+
+        /* Drop zone */
+        .dropzone {
+            border: 2px dashed #cbd5e0;
+            border-radius: 20px;
+            padding: 2.5rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 1.5rem;
+            background: #fafafa;
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: #9f7aea;
+            background: #f3e8ff;
+        }
+
+        .dropzone svg {
+            width: 48px;
+            height: 48px;
+            stroke: #9f7aea;
+            margin-bottom: 0.75rem;
+        }
+
+        .dropzone .hint {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        #file-info {
+            font-size: 0.95rem;
+            margin: 0.5rem 0 1.5rem;
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            margin-bottom: 1.5rem;
+        }
+
+        button:hover:not(:disabled) {
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .progress-section {
+            margin: 1rem 0;
+        }
+
+        progress {
+            width: 100%;
+            height: 10px;
+            border-radius: 20px;
+            overflow: hidden;
+            accent-color: #9f7aea;
+        }
+
+        progress::-webkit-progress-bar {
+            background-color: #edf2f7;
+            border-radius: 20px;
+        }
+
+        progress::-webkit-progress-value {
+            background: linear-gradient(90deg, #667eea, #9f7aea);
+            border-radius: 20px;
+        }
+
+        #status {
+            margin: 0.75rem 0;
+            font-style: italic;
+            color: #4a5568;
+            min-height: 1.5rem;
+        }
+
+        .download-area {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        #download {
+            display: inline-block;
+            background: #48bb78;
+            color: white;
+            padding: 0.9rem 2rem;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+            transition: all 0.2s;
+        }
+
+        #download:hover {
+            background: #38a169;
+            transform: scale(1.02);
+        }
+
+        /* Cross‑origin isolation warning */
+        .warning {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 1.2rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+            color: #c53030;
+        }
+
+        .warning p {
+            margin-bottom: 0.5rem;
+        }
+
+        .warning code {
+            background: #fed7d7;
+            padding: 0.2rem 0.4rem;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .cmd-box {
+            background: #1a202c;
+            color: #a0aec0;
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            margin: 0.8rem 0;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .cmd-box span {
+            color: #fbbf24;
+        }
+
+        .footer-note {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #a0aec0;
+        }
+
+        .footer-note a {
+            color: #9f7aea;
+            text-decoration: none;
+        }
     </style>
+    <!-- Load ffmpeg.wasm from CDN -->
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>✨ PixelMind AI</h1>
-            <div class="subhead">Turn your words into stunning images — completely free</div>
-        </div>
-    </header>
+    <div class="card">
+        <h1>🎵 Video → MP3</h1>
+        <div class="subtitle">Convert any video to audio – locally in your browser</div>
 
-    <div class="container">
-        <!-- Main card -->
-        <div class="card">
-            <h2 style="margin-bottom: 20px;">Describe anything</h2>
-            <div class="prompt-box">
-                <input type="text" id="prompt" placeholder="e.g. a cat astronaut on mars, digital art, 4k" value="a cat astronaut on mars">
-                <button id="generateBtn"><i class="fas fa-magic"></i> Generate</button>
+        <!-- Cross‑origin isolation warning (will be shown if needed) -->
+        <div id="coi-warning" class="warning" style="display: none;">
+            <p>⚠️ <strong>Cross‑Origin Isolation required</strong></p>
+            <p>ffmpeg.wasm needs <code>SharedArrayBuffer</code>, which is only available when the page is served with special HTTP headers.</p>
+            <p>If you’re opening this file directly (<code>file://</code>), please start a local web server with the correct headers. Copy one of the commands below and run it in the same folder:</p>
+            <div class="cmd-box"><span># Python 3</span><br>python -c "import http.server; import socketserver; handler = http.server.SimpleHTTPRequestHandler; handler.extensions_map['.wasm'] = 'application/wasm'; httpd = socketserver.TCPServer(('', 8080), handler); print('Serving on http://localhost:8080'); httpd.serve_forever()"</div>
+            <div class="cmd-box"><span># Node.js (requires npm install -g http-server)</span><br>npx http-server -p 8080 --cors -o</div>
+            <p>After running the server, open <strong>http://localhost:8080</strong> and reload this page.</p>
+        </div>
+
+        <!-- Main UI -->
+        <div id="main-ui">
+            <!-- Drop zone -->
+            <div id="dropzone" class="dropzone">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                <div>Drag & drop a video file, or click to select</div>
+                <div class="hint">Supports MP4, AVI, MOV, MKV, WebM … (max ~2GB)</div>
+                <input type="file" id="fileInput" accept="video/*" style="display: none;">
             </div>
 
-            <!-- Result area -->
-            <div class="result-area" id="resultArea">
-                <div class="spinner" id="spinner" style="display: none;"></div>
-                <img id="generatedImage" src="" alt="Your generated image will appear here" style="display: none;">
-                <p id="placeholderText" style="color: #9ca3af;"><i class="fas fa-image"></i> Your generated image will appear here</p>
+            <div id="file-info"></div>
+
+            <button id="convertBtn" disabled>⬇️ Convert to MP3</button>
+
+            <div class="progress-section">
+                <progress id="progressBar" value="0" max="1" style="display: none;"></progress>
+                <div id="status"></div>
             </div>
 
-            <div class="image-meta" id="imageMeta"></div>
+            <div class="download-area">
+                <a id="downloadLink" href="#" style="display: none;">Download MP3</a>
+            </div>
         </div>
 
-        <!-- AdSense placeholder (replace with your ad code later) -->
-        <div class="ad-placeholder" id="adContainer">
-            [ Google AdSense will go here — create an account and paste the code ]
-        </div>
-
-        <!-- Info note about free usage -->
-        <div class="note">
-            <i class="fas fa-info-circle"></i> Powered by <strong>Pollinations.AI</strong> – completely free. Images are saved to Cloudinary for permanent access.
+        <div class="footer-note">
+            🔒 100% local – your file never leaves your device.<br>
+            Powered by <a href="https://ffmpegwasm.netlify.app/" target="_blank">ffmpeg.wasm</a>
         </div>
     </div>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 PixelMind AI. Built with ❤️ for creators.</p>
-            <div class="footer-links">
-                <a href="#">Privacy Policy</a>
-                <a href="#">Terms of Service</a>
-                <a href="#">Contact</a>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Cloudinary Upload Widget -->
-    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script>
-        // YOUR CLOUDINARY DETAILS (already set!)
-        const CLOUD_NAME = 'dgwwfldml';   // <-- This is yours
-        const UPLOAD_PRESET = 'ml_default'; // <-- Your preset
-
-        const promptInput = document.getElementById('prompt');
-        const generateBtn = document.getElementById('generateBtn');
-        const spinner = document.getElementById('spinner');
-        const generatedImage = document.getElementById('generatedImage');
-        const placeholderText = document.getElementById('placeholderText');
-        const imageMeta = document.getElementById('imageMeta');
-
-        generateBtn.addEventListener('click', async () => {
-            const prompt = promptInput.value.trim();
-            if (!prompt) return;
-
-            // Show loading state
-            spinner.style.display = 'block';
-            generatedImage.style.display = 'none';
-            placeholderText.style.display = 'none';
-            imageMeta.innerHTML = '';
-            generateBtn.disabled = true;
-
-            try {
-                // 1. Generate via Pollinations
-                const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true`;
-
-                // 2. Fetch the image as a blob
-                const response = await fetch(pollinationsUrl);
-                if (!response.ok) throw new Error('Image generation failed');
-                const imageBlob = await response.blob();
-
-                // 3. Upload to Cloudinary (for permanent storage)
-                const formData = new FormData();
-                formData.append('file', imageBlob);
-                formData.append('upload_preset', UPLOAD_PRESET);
-                formData.append('public_id', `pixelmind_${Date.now()}`);
-
-                const uploadResponse = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const uploadData = await uploadResponse.json();
-
-                if (uploadData.secure_url) {
-                    // 4. Display the permanent image
-                    generatedImage.src = uploadData.secure_url;
-                    generatedImage.style.display = 'block';
-                    imageMeta.innerHTML = `✅ Image saved permanently – <a href="${uploadData.secure_url}" target="_blank">Open original</a>`;
-                } else {
-                    throw new Error('Cloudinary upload failed');
-                }
-            } catch (error) {
-                console.error(error);
-                placeholderText.style.display = 'block';
-                placeholderText.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error generating image. Please try again.';
-            } finally {
-                spinner.style.display = 'none';
-                generateBtn.disabled = false;
+        (function() {
+            // Detect cross‑origin isolation
+            if (!window.crossOriginIsolated) {
+                // Show warning, hide main UI elements that depend on ffmpeg
+                document.getElementById('coi-warning').style.display = 'block';
+                document.getElementById('main-ui').style.opacity = '0.5';
+                document.getElementById('main-ui').style.pointerEvents = 'none';
+                // Optionally disable button etc – but user can't convert anyway
             }
-        });
+
+            const { createFFmpeg, fetchFile } = FFmpeg;
+            let ffmpeg = null;
+            try {
+                ffmpeg = createFFmpeg({ 
+                    log: false,
+                    corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
+                });
+            } catch (e) {
+                console.warn('FFmpeg creation failed (likely due to missing SharedArrayBuffer)', e);
+            }
+
+            // DOM elements
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('file-info');
+            const convertBtn = document.getElementById('convertBtn');
+            const progressBar = document.getElementById('progressBar');
+            const statusDiv = document.getElementById('status');
+            const downloadLink = document.getElementById('downloadLink');
+
+            let selectedFile = null;
+
+            // --- Drag & drop handlers ---
+            dropzone.addEventListener('click', () => fileInput.click());
+
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+
+            dropzone.addEventListener('dragleave', () => {
+                dropzone.classList.remove('dragover');
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+
+            function handleFile(file) {
+                selectedFile = file;
+                const size = (file.size / (1024 * 1024)).toFixed(2);
+                fileInfo.textContent = `📁 ${file.name} (${size} MB)`;
+                convertBtn.disabled = !window.crossOriginIsolated;  // only enable if isolated
+                statusDiv.textContent = '';
+                downloadLink.style.display = 'none';
+            }
+
+            // --- Conversion ---
+            convertBtn.addEventListener('click', async () => {
+                if (!selectedFile) return;
+                if (!ffmpeg) {
+                    statusDiv.textContent = 'FFmpeg not available (cross‑origin isolation missing).';
+                    return;
+                }
+
+                try {
+                    // Reset UI
+                    convertBtn.disabled = true;
+                    progressBar.style.display = 'block';
+                    progressBar.value = 0;
+                    downloadLink.style.display = 'none';
+                    statusDiv.textContent = 'Loading FFmpeg (first time may take a few seconds)...';
+
+                    // Load ffmpeg if needed
+                    if (!ffmpeg.isLoaded()) {
+                        await ffmpeg.load();
+                    }
+
+                    statusDiv.textContent = 'Processing...';
+
+                    // Write file to virtual filesystem
+                    ffmpeg.FS('writeFile', 'input', await fetchFile(selectedFile));
+
+                    // Run conversion: extract audio to MP3 (128k)
+                    await ffmpeg.run('-i', 'input', '-vn', '-acodec', 'libmp3lame', '-ab', '128k', 'output.mp3');
+
+                    statusDiv.textContent = 'Finalizing...';
+
+                    // Read output
+                    const data = ffmpeg.FS('readFile', 'output.mp3');
+                    const blob = new Blob([data.buffer], { type: 'audio/mpeg' });
+                    const url = URL.createObjectURL(blob);
+                    downloadLink.href = url;
+                    downloadLink.download = selectedFile.name.replace(/\.[^/.]+$/, '') + '.mp3';
+                    downloadLink.textContent = '⬇️ Download MP3';
+                    downloadLink.style.display = 'inline-block';
+
+                    statusDiv.textContent = '✅ Conversion complete!';
+                } catch (error) {
+                    statusDiv.textContent = '❌ Error: ' + error.message;
+                    console.error(error);
+                } finally {
+                    convertBtn.disabled = false;
+                    progressBar.style.display = 'none';
+                    // Clean up virtual files (optional)
+                    try {
+                        ffmpeg.FS('unlink', 'input');
+                        ffmpeg.FS('unlink', 'output.mp3');
+                    } catch (e) {}
+                }
+            });
+
+            // Optional: progress monitoring
+            if (ffmpeg) {
+                ffmpeg.setProgress(({ ratio }) => {
+                    progressBar.value = ratio;
+                });
+            }
+
+            // If cross‑origin isolated, hide warning (already hidden by default)
+        })();
     </script>
 </body>
 </html>
