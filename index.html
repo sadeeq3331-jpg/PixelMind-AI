@@ -184,18 +184,25 @@
             font-size: 0.9rem;
             color: #92400e;
         }
+
+        .error-hint {
+            color: #e53e3e;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
     </style>
-    <!-- Load ffmpeg.wasm (single‑threaded core, no SharedArrayBuffer needed) -->
-    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+    <!-- Load ffmpeg.wasm from jsDelivr (reliable CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 </head>
 <body>
     <div class="card">
         <h1>🎵 Video → MP3</h1>
         <div class="subtitle">Convert any video to audio – locally in your browser</div>
 
-        <!-- Single‑threaded performance note (optional) -->
+        <!-- Single‑threaded performance note -->
         <div class="performance-note">
-            ⚡ Uses single‑threaded conversion – works directly from the file system. For very large files (≥500MB), consider using the <a href="#" onclick="alert('Run a local server with the multi‑threaded core for faster speeds.'); return false;">multi‑threaded version</a>.
+            ⚡ Works directly from the file system (no server needed). For very large files (≥500MB), conversion may take a few minutes.
         </div>
 
         <!-- Main UI -->
@@ -219,6 +226,9 @@
             <div class="progress-section">
                 <progress id="progressBar" value="0" max="1" style="display: none;"></progress>
                 <div id="status"></div>
+                <div id="errorHint" class="error-hint">
+                    If the download keeps failing, please check your internet connection or try a different browser (Chrome/Edge/Firefox).
+                </div>
             </div>
 
             <div class="download-area">
@@ -234,11 +244,11 @@
 
     <script>
         (function() {
-            // Use single‑threaded core – no cross‑origin isolation required
+            // Use single‑threaded core from jsDelivr (more reliable)
             const { createFFmpeg, fetchFile } = FFmpeg;
             const ffmpeg = createFFmpeg({ 
                 log: false,
-                corePath: 'https://unpkg.com/@ffmpeg/core-st@0.11.0/dist/ffmpeg-core.js' // single‑threaded
+                corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js'
             });
 
             // DOM elements
@@ -249,6 +259,7 @@
             const progressBar = document.getElementById('progressBar');
             const statusDiv = document.getElementById('status');
             const downloadLink = document.getElementById('downloadLink');
+            const errorHint = document.getElementById('errorHint');
 
             let selectedFile = null;
 
@@ -283,9 +294,10 @@
                 selectedFile = file;
                 const size = (file.size / (1024 * 1024)).toFixed(2);
                 fileInfo.textContent = `📁 ${file.name} (${size} MB)`;
-                convertBtn.disabled = false; // always enabled now
+                convertBtn.disabled = false;
                 statusDiv.textContent = '';
                 downloadLink.style.display = 'none';
+                errorHint.style.display = 'none';
             }
 
             // --- Conversion ---
@@ -299,6 +311,7 @@
                     progressBar.value = 0;
                     downloadLink.style.display = 'none';
                     statusDiv.textContent = 'Loading FFmpeg (first time may take a few seconds)...';
+                    errorHint.style.display = 'none';
 
                     // Load ffmpeg if needed
                     if (!ffmpeg.isLoaded()) {
@@ -328,6 +341,10 @@
                 } catch (error) {
                     statusDiv.textContent = '❌ Error: ' + error.message;
                     console.error(error);
+                    // Show a hint if it's a network/fetch error
+                    if (error.message.includes('fetch') || error.message.includes('network')) {
+                        errorHint.style.display = 'block';
+                    }
                 } finally {
                     convertBtn.disabled = false;
                     progressBar.style.display = 'none';
