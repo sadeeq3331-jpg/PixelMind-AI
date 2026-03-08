@@ -163,57 +163,29 @@
             transform: scale(1.02);
         }
 
-        /* Cross‑origin isolation warning */
-        .warning {
-            background: #fff5f5;
-            border-left: 4px solid #f56565;
-            padding: 1.2rem;
-            border-radius: 12px;
-            margin: 1.5rem 0;
-            font-size: 0.95rem;
-            color: #c53030;
-        }
-
-        .warning p {
-            margin-bottom: 0.5rem;
-        }
-
-        .warning code {
-            background: #fed7d7;
-            padding: 0.2rem 0.4rem;
-            border-radius: 6px;
-            font-family: 'Fira Code', monospace;
-        }
-
-        .cmd-box {
-            background: #1a202c;
-            color: #a0aec0;
-            padding: 0.8rem 1rem;
-            border-radius: 10px;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.9rem;
-            margin: 0.8rem 0;
-            overflow-x: auto;
-            white-space: nowrap;
-        }
-
-        .cmd-box span {
-            color: #fbbf24;
-        }
-
-        .footer-note {
+        .note {
             margin-top: 2rem;
             text-align: center;
             font-size: 0.8rem;
             color: #a0aec0;
         }
 
-        .footer-note a {
+        .note a {
             color: #9f7aea;
             text-decoration: none;
         }
+
+        .performance-note {
+            background: #fef3c7;
+            border-left: 4px solid #fbbf24;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            color: #92400e;
+        }
     </style>
-    <!-- Load ffmpeg.wasm from CDN -->
+    <!-- Load ffmpeg.wasm (single‑threaded core, no SharedArrayBuffer needed) -->
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 </head>
 <body>
@@ -221,14 +193,9 @@
         <h1>🎵 Video → MP3</h1>
         <div class="subtitle">Convert any video to audio – locally in your browser</div>
 
-        <!-- Cross‑origin isolation warning (will be shown if needed) -->
-        <div id="coi-warning" class="warning" style="display: none;">
-            <p>⚠️ <strong>Cross‑Origin Isolation required</strong></p>
-            <p>ffmpeg.wasm needs <code>SharedArrayBuffer</code>, which is only available when the page is served with special HTTP headers.</p>
-            <p>If you’re opening this file directly (<code>file://</code>), please start a local web server with the correct headers. Copy one of the commands below and run it in the same folder:</p>
-            <div class="cmd-box"><span># Python 3</span><br>python -c "import http.server; import socketserver; handler = http.server.SimpleHTTPRequestHandler; handler.extensions_map['.wasm'] = 'application/wasm'; httpd = socketserver.TCPServer(('', 8080), handler); print('Serving on http://localhost:8080'); httpd.serve_forever()"</div>
-            <div class="cmd-box"><span># Node.js (requires npm install -g http-server)</span><br>npx http-server -p 8080 --cors -o</div>
-            <p>After running the server, open <strong>http://localhost:8080</strong> and reload this page.</p>
+        <!-- Single‑threaded performance note (optional) -->
+        <div class="performance-note">
+            ⚡ Uses single‑threaded conversion – works directly from the file system. For very large files (≥500MB), consider using the <a href="#" onclick="alert('Run a local server with the multi‑threaded core for faster speeds.'); return false;">multi‑threaded version</a>.
         </div>
 
         <!-- Main UI -->
@@ -259,33 +226,20 @@
             </div>
         </div>
 
-        <div class="footer-note">
+        <div class="note">
             🔒 100% local – your file never leaves your device.<br>
-            Powered by <a href="https://ffmpegwasm.netlify.app/" target="_blank">ffmpeg.wasm</a>
+            Powered by <a href="https://ffmpegwasm.netlify.app/" target="_blank">ffmpeg.wasm</a> (single‑threaded core)
         </div>
     </div>
 
     <script>
         (function() {
-            // Detect cross‑origin isolation
-            if (!window.crossOriginIsolated) {
-                // Show warning, hide main UI elements that depend on ffmpeg
-                document.getElementById('coi-warning').style.display = 'block';
-                document.getElementById('main-ui').style.opacity = '0.5';
-                document.getElementById('main-ui').style.pointerEvents = 'none';
-                // Optionally disable button etc – but user can't convert anyway
-            }
-
+            // Use single‑threaded core – no cross‑origin isolation required
             const { createFFmpeg, fetchFile } = FFmpeg;
-            let ffmpeg = null;
-            try {
-                ffmpeg = createFFmpeg({ 
-                    log: false,
-                    corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
-                });
-            } catch (e) {
-                console.warn('FFmpeg creation failed (likely due to missing SharedArrayBuffer)', e);
-            }
+            const ffmpeg = createFFmpeg({ 
+                log: false,
+                corePath: 'https://unpkg.com/@ffmpeg/core-st@0.11.0/dist/ffmpeg-core.js' // single‑threaded
+            });
 
             // DOM elements
             const dropzone = document.getElementById('dropzone');
@@ -329,7 +283,7 @@
                 selectedFile = file;
                 const size = (file.size / (1024 * 1024)).toFixed(2);
                 fileInfo.textContent = `📁 ${file.name} (${size} MB)`;
-                convertBtn.disabled = !window.crossOriginIsolated;  // only enable if isolated
+                convertBtn.disabled = false; // always enabled now
                 statusDiv.textContent = '';
                 downloadLink.style.display = 'none';
             }
@@ -337,10 +291,6 @@
             // --- Conversion ---
             convertBtn.addEventListener('click', async () => {
                 if (!selectedFile) return;
-                if (!ffmpeg) {
-                    statusDiv.textContent = 'FFmpeg not available (cross‑origin isolation missing).';
-                    return;
-                }
 
                 try {
                     // Reset UI
@@ -381,7 +331,7 @@
                 } finally {
                     convertBtn.disabled = false;
                     progressBar.style.display = 'none';
-                    // Clean up virtual files (optional)
+                    // Clean up virtual files
                     try {
                         ffmpeg.FS('unlink', 'input');
                         ffmpeg.FS('unlink', 'output.mp3');
@@ -389,14 +339,10 @@
                 }
             });
 
-            // Optional: progress monitoring
-            if (ffmpeg) {
-                ffmpeg.setProgress(({ ratio }) => {
-                    progressBar.value = ratio;
-                });
-            }
-
-            // If cross‑origin isolated, hide warning (already hidden by default)
+            // Progress monitoring
+            ffmpeg.setProgress(({ ratio }) => {
+                progressBar.value = ratio;
+            });
         })();
     </script>
 </body>
