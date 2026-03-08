@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video to MP3 · local converter</title>
     <style>
+        /* (your CSS unchanged) */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-
         body {
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -20,7 +20,6 @@
             justify-content: center;
             padding: 1.5rem;
         }
-
         .card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(8px);
@@ -31,7 +30,6 @@
             padding: 2.5rem;
             transition: all 0.2s;
         }
-
         h1 {
             font-size: 2.2rem;
             font-weight: 600;
@@ -40,7 +38,6 @@
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
         }
-
         .subtitle {
             color: #4a5568;
             margin-bottom: 2rem;
@@ -48,7 +45,6 @@
             border-left: 4px solid #9f7aea;
             padding-left: 1rem;
         }
-
         /* Drop zone */
         .dropzone {
             border: 2px dashed #cbd5e0;
@@ -60,32 +56,27 @@
             margin-bottom: 1.5rem;
             background: #fafafa;
         }
-
         .dropzone:hover, .dropzone.dragover {
             border-color: #9f7aea;
             background: #f3e8ff;
         }
-
         .dropzone svg {
             width: 48px;
             height: 48px;
             stroke: #9f7aea;
             margin-bottom: 0.75rem;
         }
-
         .dropzone .hint {
             color: #718096;
             font-size: 0.9rem;
             margin-top: 0.5rem;
         }
-
         #file-info {
             font-size: 0.95rem;
             margin: 0.5rem 0 1.5rem;
             color: #2d3748;
             font-weight: 500;
         }
-
         button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -100,22 +91,18 @@
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
             margin-bottom: 1.5rem;
         }
-
         button:hover:not(:disabled) {
             transform: scale(1.02);
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
         }
-
         button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             box-shadow: none;
         }
-
         .progress-section {
             margin: 1rem 0;
         }
-
         progress {
             width: 100%;
             height: 10px;
@@ -123,29 +110,24 @@
             overflow: hidden;
             accent-color: #9f7aea;
         }
-
         progress::-webkit-progress-bar {
             background-color: #edf2f7;
             border-radius: 20px;
         }
-
         progress::-webkit-progress-value {
             background: linear-gradient(90deg, #667eea, #9f7aea);
             border-radius: 20px;
         }
-
         #status {
             margin: 0.75rem 0;
             font-style: italic;
             color: #4a5568;
             min-height: 1.5rem;
         }
-
         .download-area {
             text-align: center;
             margin-top: 1.5rem;
         }
-
         #download {
             display: inline-block;
             background: #48bb78;
@@ -157,24 +139,20 @@
             box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
             transition: all 0.2s;
         }
-
         #download:hover {
             background: #38a169;
             transform: scale(1.02);
         }
-
         .note {
             margin-top: 2rem;
             text-align: center;
             font-size: 0.8rem;
             color: #a0aec0;
         }
-
         .note a {
             color: #9f7aea;
             text-decoration: none;
         }
-
         .performance-note {
             background: #fef3c7;
             border-left: 4px solid #fbbf24;
@@ -184,7 +162,6 @@
             font-size: 0.9rem;
             color: #92400e;
         }
-
         .error-hint {
             color: #e53e3e;
             font-size: 0.9rem;
@@ -192,19 +169,18 @@
             display: none;
         }
     </style>
-    <!-- Load ffmpeg.wasm from jsDelivr (reliable CDN) -->
+    <!-- Load ffmpeg.wasm and matching core -->
+    <!-- Use CDN with version aligned for @ffmpeg/ffmpeg@0.11.6 and @ffmpeg/core-st@0.11.6 -->
     <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 </head>
 <body>
     <div class="card">
         <h1>🎵 Video → MP3</h1>
         <div class="subtitle">Convert any video to audio – locally in your browser</div>
-
         <!-- Single‑threaded performance note -->
         <div class="performance-note">
             ⚡ Works directly from the file system (no server needed). For very large files (≥500MB), conversion may take a few minutes.
         </div>
-
         <!-- Main UI -->
         <div id="main-ui">
             <!-- Drop zone -->
@@ -244,11 +220,13 @@
 
     <script>
         (function() {
-            // Use single‑threaded core from jsDelivr (more reliable)
+            // Use single‑threaded core from CDN, version MUST MATCH ffmpeg version above!
             const { createFFmpeg, fetchFile } = FFmpeg;
+            // version 0.11.6 for both ffmpeg.min.js and core-st
             const ffmpeg = createFFmpeg({ 
                 log: false,
-                corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js'
+                corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core-st@0.11.6/dist/ffmpeg-core.js'
+                // You can also use: 'https://unpkg.com/@ffmpeg/core-st@0.11.6/dist/ffmpeg-core.js'
             });
 
             // DOM elements
